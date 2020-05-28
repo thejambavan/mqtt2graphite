@@ -12,10 +12,12 @@ import socket
 import json
 import signal
 
-MQTT_HOST = os.environ.get('MQTT_HOST', '127.0.0.1')
+MQTT_HOST = os.environ.get('MQTT_HOST', '192.168.1.55')
 MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
-CARBON_SERVER = os.environ.get('CARBON_SERVER', '127.0.0.1')
-CARBON_PORT = int(os.environ.get('CARBON_PORT', 2003))
+#CARBON_SERVER = os.environ.get('CARBON_SERVER', '192.168.1.18')
+CARBON_SERVER= '127.0.0.1'
+CARBON_PORT=2003
+#CARBON_PORT = int(os.environ.get('CARBON_PORT', 2003))
 
 LOGFORMAT = '%(asctime)-15s %(message)s'
 
@@ -94,14 +96,26 @@ def on_message(mosq, userdata, msg):
             elif type == 'j':
                 '''JSON: try and load the JSON string from payload and use
                    subkeys to pass to Carbon'''
-                try:
-                    st = json.loads(msg.payload)
-                    for k in st:
-                        if is_number(st[k]):
-                            lines.append("%s.%s %f %d" % (carbonkey, k, float(st[k]), now))
-                except:
-                    logging.info("Topic %s contains non-JSON payload [%s]" %
-                            (msg.topic, msg.payload))
+                payload_string = msg.payload.decode()
+                logging.debug("Payload String: %s", payload_string)
+                st = json.loads(payload_string)
+                for k in st:
+                    print(k)
+#                    logging.debug("MQTT Payload: %s.%s %f %d" % (carbonkey, k, float(st[k]), now))
+#                    lines.append("%s.%s %f %d" % (carbonkey, k, float(st[k]), now))
+#                try:
+#                    payload_string = msg.payload.decode()
+#                    logging.debug("Payload String: %s", payload_string)
+#                    st = json.loads(payload_string)
+#                    for k in st[1]:
+#                        print(k)
+#                        logging.debug("MQTT Payload: %s.%s %f %d" % (carbonkey, k, float(st[k]), now))
+#                        lines.append("%s.%s %f %d" % (carbonkey, k, float(st[k]), now))
+#                        #if is_number(st[k]):
+#                            #lines.append("%s.%s %f %d" % (carbonkey, k, float(st[k]), now))
+#                except:
+#                    logging.info("Topic %s contains non-JSON payload [%s]" %
+#                            (msg.topic, payload_string))
                     return
 
             else:
@@ -109,9 +123,11 @@ def on_message(mosq, userdata, msg):
                 return
 
             message = '\n'.join(lines) + '\n'
-            logging.debug("%s", message)
-
-            sock.sendto(message, (CARBON_SERVER, CARBON_PORT))
+            logging.debug("MESSAGE: %s", message)
+            sock.sendto(message.encode(), (CARBON_SERVER, CARBON_PORT))
+            sock2.connect(CARBON_SERVER, CARBON_PORT)
+            sock2.sendall(message.encode())
+            sock2.close()
   
 def on_subscribe(mosq, userdata, mid, granted_qos):
     pass
@@ -149,9 +165,12 @@ def main():
         map[topic] = (type, remap)
 
     try:
+        logging.info('Setting up socket')
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock2 = socket.socket()
     except:
-        sys.stderr.write("Can't create UDP socket\n")
+        #sys.stderr.write("Can't create UDP socket\n")
+        sys.stderr.write("Can't create Socket\n")
         sys.exit(1)
 
     userdata = {

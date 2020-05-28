@@ -18,20 +18,23 @@
 #	If the # character is present, it will be replaced by the
 #	MQTT topic name with the points converted to slashes
 
-n	test/mosquitto/messages/load/received
-n	test/mosquitto/messages/load/#
+#n	test/mosquitto/messages/load/received
+#n	test/mosquitto/messages/load/#
 
-n	test/jp/j1
+#n	test/jp/j1
 
-n	$SYS/broker/load/messages/received/1min		test.mosquitto.messages.load.received
-n	$SYS/broker/load/messages/sent/1min		test.mosquitto.messages.load.sent
+#n	$SYS/broker/load/messages/received/1min		test.mosquitto.messages.load.received
+#n	$SYS/broker/load/messages/sent/1min		test.mosquitto.messages.load.sent
 
 # Will be sent to "homeautomation.sensor.temperature.bedroom"
-n	sensor/temperature/bedroom	homeautomation.#
+#n	sensor/temperature/bedroom	homeautomation.#
 
-j	test/jp/j2
+#j	test/jp/j2
 
-j	test/jp/j3					test.jp.json
+#j	test/jp/j3					test.jp.json
+j	tele/bme280-office/SENSOR			sensors.office
+n       home/power/global				sensors.power.cc128
+n       home/temperature/placard                        sensors.temperature.cc128
 
 # The last line above means, subscribe to the MQTT topic of "test/jp/jp3",
 # extract JSON, and translate the topic to a the "test.jp.json.___" key.
